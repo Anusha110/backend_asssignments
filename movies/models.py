@@ -8,7 +8,7 @@ class Director(models.Model):
 class Actor(models.Model):
     actor_id = models.CharField(max_length=100, primary_key=True)
     name = models.CharField(max_length=100)
-
+    gender = models.CharField(max_length=50, null=True)
 
 class Movie(models.Model):
     movie_id = models.CharField(max_length=100, primary_key=True)
