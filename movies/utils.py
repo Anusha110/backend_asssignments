@@ -9,19 +9,23 @@ def populate_database_with_fixture_data():
     actor_list = [
         {
             "actor_id": "actor_1",
-            "name": "Actor 1"
+            "name": "Actor 1",
+            "gender": "FEMALE"
         },
         {
             "actor_id": "actor_2",
-            "name": "Actor 2"
+            "name": "Actor 2",
+            "gender": "MALE"
         },
         {
             "actor_id": "actor_3",
-            "name": "Actor 3"
+            "name": "Actor 3",
+            "gender": "FEMALE"
         },
         {
             "actor_id": "actor_4",
-            "name": "Actor 4"
+            "name": "Actor 4",
+            "gender": "FEMALE"
         }
     ]
 
@@ -154,7 +158,7 @@ def populate_database(
 
 def populate_actors(actors_list):
     actors_objects = Actor.objects.bulk_create(
-        [Actor(actor_id=actor['actor_id'], name=actor['name']) for actor in actors_list])
+        [Actor(actor_id=actor['actor_id'], name=actor['name'], gender=actor['gender']) for actor in actors_list])
     return actors_objects
 
 
@@ -234,7 +238,7 @@ def get_actor_object(actor_id, actor_objects):
             return actor
 
 
-### Assignment 1
+### Assignment 2
 
 # Task 3
 def get_no_of_distinct_movies_actor_acted(actor_id):
@@ -249,7 +253,7 @@ def get_movies_directed_by_director(director_obj):
 # Task 5
 def get_average_rating_of_movie(movie_obj):
     try:
-        rating_obj = Rating.objects.get(movie_obj=movie_obj)
+        rating_obj = Rating.objects.get(movie=movie_obj)
         sum_of_ratings = rating_obj.rating_one_count + rating_obj.rating_two_count * 2 + rating_obj.rating_three_count * 3 + rating_obj.rating_four_count * 4 + rating_obj.rating_five_count * 5
         number_of_ratings = rating_obj.rating_one_count + rating_obj.rating_two_count + rating_obj.rating_three_count + rating_obj.rating_four_count + rating_obj.rating_five_count
         return sum_of_ratings / number_of_ratings
@@ -285,14 +289,14 @@ def remove_all_actors_from_given_movie(movie_obj):
 
 # Task 11
 def get_all_rating_objects_for_given_movies(movie_objs):
-    Rating.objects.filter(movie__in=movie_objs)
+    return Rating.objects.filter(movie__in=movie_objs)
 
 
 ### Assignment 3
 
 def get_total_number_of_ratings(movie_obj):
     try:
-        rating_obj = Rating.objects.get(movie_obj=movie_obj)
+        rating_obj = Rating.objects.get(movie=movie_obj)
         number_of_ratings = rating_obj.rating_one_count + rating_obj.rating_two_count + rating_obj.rating_three_count + rating_obj.rating_four_count + rating_obj.rating_five_count
         return number_of_ratings
     except ObjectDoesNotExist:
@@ -327,14 +331,17 @@ def get_movies_by_given_movie_objs(movie_objs):
         movie_details_list.append(movie_details_dict)
 
     return movie_details_list
-def get_movies_by_given_movie_names(movie_names):
 
-    movie_objs = Movie.objects.filter(name__in = movie_names)
+
+def get_movies_by_given_movie_names(movie_names):
+    movie_objs = Movie.objects.filter(name__in=movie_names)
     return get_movies_by_given_movie_objs(movie_objs)
+
 
 # Task 2
 def get_movies_released_in_summer_in_given_years():
-    return get_movies_by_given_movie_objs(Movie.objects.all().filter(release_date__year__range=[2005, 2010], release_date__month__in=[5, 6, 7]))
+    return get_movies_by_given_movie_objs(
+        Movie.objects.all().filter(release_date__year__range=[2005, 2010], release_date__month__in=[5, 6, 7]))
 
 
 # Task 3
@@ -353,28 +360,106 @@ def get_movie_names_with_ratings_in_given_range():
 
 # Task 5
 def get_movie_names_with_ratings_above_given_minimum():
-    Movie.objects.filter(Q(rating__rating_five_count__gte=500) | Q(rating__rating_four_count__gt=1000) | Q(
-        rating__rating_three_count__gt=2000) | Q(rating__rating_two_count__gt=4000) | Q(
-        rating__rating_one_count__gt=8000), release_date__year__gt=2000).value_list('name', flat=True)
+    movie_names = Movie.objects.filter(
+        Q(rating__rating_five_count__gte=500) | Q(rating__rating_four_count__gt=1000) | Q(
+            rating__rating_three_count__gt=2000) | Q(rating__rating_two_count__gt=4000) | Q(
+            rating__rating_one_count__gt=8000), release_date__year__gt=2000).value_list('name', flat=True)
+    return list(movie_names)
+
 
 # Task 6
 def get_movie_directors_in_given_year():
-    return Director.objects.filter(movie__release_date__year = 2000).value_list('name', flat=True)
+    director_names = Director.objects.filter(movie__release_date__year=2000).value_list('name', flat=True)
+    return list(director_names)
+
 
 # Task 7
 def get_actor_names_debuted_in_21st_century():
-    return Actor.objects.filter(cast__is_debut_movie = True, movie__release_date__year__gte = 2000).value_list('name', flat=True)
+    actor_names = Actor.objects.filter(cast__is_debut_movie=True,
+                                       movie__release_date__year__range=[2001, 2100]).value_list('name', flat=True)
+    return list(actor_names)
+
 
 # Task 8
- def get_director_names_containing_big_as_well_as_movie_in_may():
-     Director.objects.filter(movie__name__contains = "big").filter(movie__release_date__year = 5).values_list('name', flat=True)
+def get_director_names_containing_big_as_well_as_movie_in_may():
+    director_names = Director.objects.filter(movie__name__contains="big").filter(
+        movie__release_date__year=5).values_list('name', flat=True)
+    return list(director_names)
 
- # Task 9
+
+# Task 9
 def get_director_names_containing_big_and_movie_in_may():
-    Director.objects.filter(movie__name__contains="big", movie__release_date__year=5).values_list('name', flat=True)
+    director_names = Director.objects.filter(movie__name__contains="big", movie__release_date__year=5).values_list(
+        'name', flat=True)
+    return list(director_names)
 
 
 # Task 10
 def reset_ratings_for_movies_in_this_year():
-    Rating.objects.filter(movie__release_date__year=2000).update(rating_one_count=0, rating_two_count=0,rating_three_count=0, rating_four_count=0,rating_five_count=0)
+    Rating.objects.filter(movie__release_date__year=2000).update(rating_one_count=0, rating_two_count=0,
+                                                                 rating_three_count=0, rating_four_count=0,
+                                                                 rating_five_count=0)
 
+
+### Assignment 4
+
+# Task 1
+def get_average_box_office_collections():
+    avg_box_office_collection = \
+    Movie.objects.all().aggregate(avg_box_office_collection=Avg('box_office_collection_in_crores'))[
+        'avg_box_office_collection']
+    if avg_box_office_collection == None:
+        return 0
+    return round(avg_box_office_collection, 3)
+
+
+# Task 2
+def get_movies_with_distinct_actors_count():
+    return list(Movie.objects.all().annotate(actors_count=Count('actors', distinct=True)))
+
+
+# Task 3
+def get_male_and_female_actors_count_for_each_movie():
+    return list(Movie.objects.all().annotate(male_actors_count=Count('actors', filter=Q(actors__gender="MALE")),
+                                             female_actors_count=Count('actors', filter=Q(actors__gender="FEMALE"))))
+
+
+# Task 4
+def get_roles_count_for_each_movie():
+    return list(Movie.objects.annotate(roles_count=Count('cast__role', distinct=True)))
+
+
+# Task 5
+def get_role_frequency():
+    role_frequency_dict = {}
+    for role_dict in Cast.objects.values('role').annotate(Count('role')):
+        role_frequency_dict[role_dict['role']] = role_dict['role__count']
+    return role_frequency_dict
+
+
+# Task 6
+def get_role_frequency_in_order():
+    return list(
+        Cast.objects.values('role').annotate(roles_count=Count('role')).values_list('role', 'roles_count').order_by(
+            '-movie__release_date'))
+
+
+# Task 7
+def get_no_of_movies_and_distinct_roles_for_each_actor():
+    return list(Actor.objects.annotate(movies_count=Count('movie', distinct=True),
+                                       roles_count=Count('cast__role', distinct=True)))
+
+
+# Task 8
+def get_movies_with_atleast_forty_actors():
+    return list(Movie.objects.annotate(actor_count=Count('actors', distinct=True)).filter(actor_count__gte=40))
+
+
+# Task 9
+def get_average_no_of_actors_for_all_movies():
+    avg_no_of_actors = Movie.objects.annotate(num_of_actors=Count('actors', distinct=True)).aggregate(
+        avg_no_of_actors=Avg('num_of_actors'))['avg_no_of_actors']
+
+    if avg_no_of_actors == None:
+        return 0
+    return round(avg_no_of_actors, 3)
