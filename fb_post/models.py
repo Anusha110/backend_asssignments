@@ -1,11 +1,11 @@
 from django.db import models
 
-from .constants import ReactionType
+from .constants import ReactionTypeEnum
 
 
 class User(models.Model):
     name = models.CharField(max_length=100)
-    profile_pic = models.CharField(max_length=150)
+    profile_pic = models.URLField()
 
 
 class Post(models.Model):
@@ -23,8 +23,8 @@ class Comment(models.Model):
 
 
 class Reaction(models.Model):
-    reaction_type = models.CharField(max_length=100, choices=ReactionType.choices())
-    post = models.ForeignKey(Post, on_delete=models.CASCADE, null=True, related_name="post_reactions")
-    comment = models.ForeignKey(Comment, on_delete=models.CASCADE, null=True, related_name="comment_reactions")
+    reaction_type = models.CharField(max_length=100, choices=ReactionTypeEnum.choices())
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, null=True)
+    comment = models.ForeignKey(Comment, on_delete=models.CASCADE, null=True)
     reacted_at = models.DateTimeField()
     reacted_by = models.ForeignKey(User, on_delete=models.CASCADE)

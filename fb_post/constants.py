@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class ReactionType(Enum):
+class ReactionTypeEnum(Enum):
     WOW = 1
     LIT = 2
     LOVE = 3
@@ -14,3 +14,4 @@ class ReactionType(Enum):
     @classmethod
     def choices(cls):
         return [(key.value, key.name) for key in cls]
+
