@@ -25,3 +25,23 @@ class InvalidReactionTypeException(Exception):
 class UserCannotDeletePostException(Exception):
     pass
 
+class InvalidGroupNameException(Exception):
+    pass
+
+class InvalidMemberException(Exception):
+    pass
+
+class InvalidGroupException(Exception):
+    pass
+
+class UserNotInGroupException(Exception):
+    pass
+
+class UserIsNotAdminException(Exception):
+    pass
+
+class InvalidOffSetValueException(Exception):
+    pass
+
+class InvalidLimitSetValueException(Exception):
+    pass
