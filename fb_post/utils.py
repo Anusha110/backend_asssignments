@@ -1,6 +1,6 @@
 from .constants import ReactionTypeEnum
 from .models import Post, Comment, Reaction, User
-from django.db.models import Count, Q, F
+from django.db.models import Count, Q, F, Prefetch
 from datetime import datetime
 from .exceptions import InvalidUserException, InvalidPostException, InvalidCommentException, \
     InvalidReactionTypeException, InvalidPostContent, InvalidCommentContent, InvalidReplyContent, \
@@ -190,11 +190,16 @@ def get_reactions_to_post(post_id):
 # Task 13
 def get_post(post_id):
 
-    post = raise_exception_if_invalid_post_id_else_return_post(post_id)
+    raise_exception_if_invalid_post_id_else_return_post(post_id)
 
-    post = Post.objects.filter(post_id=post_id).prefetch_related
+    post = Post.objects.filter(id=post_id).select_related('posted_by').prefetch_related("reaction_set", Prefetch("comments", queryset=Comment.objects.select_related("commented_by").prefetch_related("reaction_set", Prefetch("replies", queryset=Comment.objects.select_related("commented_by",).prefetch_related("reaction_set"))))).first()
 
-    #post = post.prefetch_related("reaction", Prefetch("comments", queryset=Comment.objects.select_related("replies"))).select_related("posted_by")
+    return get_post_details_object(post)
+    # Doubt: In order to get reactions, its hitting database. Usage of List.
+
+
+
+def get_post_details_object(post):
 
     post_details_dict = {}
     post_details_dict["post_id"] = post.id
@@ -203,11 +208,11 @@ def get_post(post_id):
         "user_id": post.posted_by_id,
         "profile_pic": post.posted_by.profile_pic
     }
-    post_details_dict["posted_at"] = post.posted_at
+    post_details_dict["posted_at"] = str(post.posted_at)
     post_details_dict["posted_content"] = post.content
     post_details_dict["reactions"] = {
         "count": post.reaction_set.count(),
-        "type": list(post.reaction_set.values_list("reaction_type", flat=True))
+        "type": post.reaction_set.values_list("reaction_type", flat=True)
     }
 
     comments_details_list = []
@@ -222,28 +227,27 @@ def get_post(post_id):
                     "name": reply.commented_by.name,
                     "profile_pic": reply.commented_by.profile_pic
                 },
-                "commented_at": reply.commented_at,
+                "commented_at": str(reply.commented_at),
                 "comment_content": reply.content,
                 "reactions": {
                     "count": reply.reaction_set.count(),
-                    "type": list(reply.reaction_set.values_list("reaction_type", flat=True))
+                    "type": reply.reaction_set.values_list("reaction_type", flat=True)
                 }
             }
             replies_list.append(reply_dict)
 
-
-        comment_dict =  {
+        comment_dict = {
             "comment_id": comment.id,
             "commenter": {
                 "user_id": comment.commented_by_id,
                 "name": comment.commented_by.name,
                 "profile_pic": comment.commented_by.profile_pic
             },
-            "commented_at": comment.commented_at,
+            "commented_at": str(comment.commented_at),
             "comment_content": comment.content,
-            "reactions":{
+            "reactions": {
                 "count": comment.reaction_set.count(),
-                "type": list(comment.reaction_set.values_list("reaction_type", flat=True))
+                "type": comment.reaction_set.values_list("reaction_type", flat=True)
             },
             "replies_count": comment.replies.count(),
             "replies": replies_list,
@@ -255,37 +259,39 @@ def get_post(post_id):
 
     return post_details_dict
 
+
 # Task 14
 def get_user_posts(user_id):
 
     raise_exception_if_invalid_user_id(user_id)
 
+    user_posts_details = []
+    posts = Post.objects.filter(posted_by_id=user_id).select_related('posted_by').prefetch_related("reaction_set", Prefetch("comments", queryset=Comment.objects.select_related("commented_by").prefetch_related("reaction_set", Prefetch("replies", queryset=Comment.objects.select_related("commented_by",).prefetch_related("reaction_set")))))
 
+    for post in posts:
+        user_posts_details.append((get_post_details_object(post)))
 
-    """
-    Explanation: Return a list of responses similar to get_post
-    """
-    pass
-
+    return user_posts_details
 
 # Task 15
 def get_replies_for_comment(comment_id):
-    """
-    :returns: [{
-        "comment_id": 2
-        "commenter": {
-            "user_id": 1,
-            "name": "iB Cricket",
-            "profile_pic": "https://dummy.url.com/pic.png"
-        },
-        "commented_at": "2019-05-21 20:22:46.810366",
-        "comment_content": "Thanks...",
-    }]
-    """
-    pass
 
+    raise_exception_if_invalid_comment_id(comment_id)
 
+    reply_objs = Comment.objects.filter(parent_comment_id=comment_id).select_related("commented_by")
 
+    reply_details_list = []
+    for reply_obj in reply_objs:
+        reply_details_dict = {
+            "comment_id": reply_obj.id,
+            "commenter": {
+                "user_id": reply_obj.commented_by_id,
+                "name": reply_obj.commented_by.name,
+                "profile_pic": reply_obj.commented_by.profile_pic
+            },
+            "commented_at": str(reply_obj.commented_at),
+            "comment_content": reply_obj.content
+        }
+        reply_details_list.append(reply_details_dict)
 
-
-
+    return reply_details_list
