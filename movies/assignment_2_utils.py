@@ -2,7 +2,7 @@ from datetime import datetime
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q, Max, Min, Avg, Count, Prefetch
 from django.db import connection
-from assignments.movies.models import Actor, Director, Movie, Rating, Cast
+from .models import Actor, Director, Movie, Rating, Cast
 
 
 
@@ -42,6 +42,7 @@ def populate_movies(movies_list):
     movies_list_for_bulk_creation = []
     director_names = [movie["director_name"] for movie in movies_list]
     director_objects = Director.objects.filter(name__in=director_names)
+    Director_objects = Director.objects.filter(name__in=director_names)
 
     for movie in movies_list:
         director_obj = get_director_object(movie["director_name"], director_objects)

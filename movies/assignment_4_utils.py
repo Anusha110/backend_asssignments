@@ -1,4 +1,4 @@
-from assignments.movies.models import Actor, Movie, Cast
+from .models import Actor, Movie, Cast
 from django.db.models import Q, Avg, Count
 
 

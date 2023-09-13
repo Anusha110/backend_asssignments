@@ -1,4 +1,4 @@
-from assignments.movies.models import Actor, Director, Movie, Cast, Rating
+from .models import Actor, Director, Movie, Cast, Rating
 from django.db.models import Q, Count, Prefetch
 from .assignment_3_utils import get_movies_by_given_movie_objs
 from .assignment_2_utils import get_average_rating_of_movie, get_total_number_of_ratings
@@ -28,8 +28,8 @@ def get_all_actor_objects_acted_in_given_movies(movie_objs):
 # Task 6
 def get_female_cast_details_from_movies_having_more_than_five_female_cast():
     movie_objs = Movie.objects.annotate(female_actor_count=Count('actors', filter=Q(actors__gender="FEMALE"))).filter(
-        female_actor_count__gt=0).prefetch_related(
-        Prefetch("cast_set", queryset=Cast.objects.filter(actor__gender="FEMALE")), "cast_set__actor").select_related(
+        female_actor_count__gt=5).prefetch_related(
+        Prefetch("cast_set__actor", queryset=Cast.objects.filter(actor__gender="FEMALE"))).select_related(
         "director", "rating")
     # Doubt (prefetch_related(Prefetch("cast_set__actor") -Related actor object doesn't exist
     return get_movies_by_given_movie_objs(movie_objs)

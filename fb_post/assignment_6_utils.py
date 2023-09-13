@@ -1,12 +1,11 @@
-from assignments.fb_post.constants import ReactionTypeEnum
-from assignments.fb_post.models import Post, Comment, Reaction, User
+from .constants import ReactionTypeEnum
+from .models import Post, Comment, Reaction, User, Group, Membership
 from django.db.models import Count, Q, F, Prefetch
 from datetime import datetime
-from assignments.fb_post.exceptions import InvalidUserException, InvalidPostException, InvalidCommentException, \
+from .exceptions import InvalidUserException, InvalidPostException, InvalidCommentException, \
     InvalidReactionTypeException, InvalidPostContent, InvalidCommentContent, InvalidReplyContent, \
-    UserCannotDeletePostException
-from .assignment_7_utils import raise_exception_if_invalid_group_id, raise_exception_if_user_not_in_group
-
+    UserCannotDeletePostException, InvalidGroupNameException, InvalidMemberException, InvalidGroupException, \
+    UserNotInGroupException, UserIsNotAdminException, InvalidOffSetValueException, InvalidLimitSetValueException
 
 # region Validation Functions
 
@@ -52,6 +51,46 @@ def raise_exception_if_invalid_reaction_type(reaction_type):
 def raise_exception_if_user_cannot_delete_post(user_id, post):
     if post.posted_by_id != user_id:
         raise UserCannotDeletePostException
+
+def raise_exception_if_invalid_group_name(group_name):
+    if (group_name == ""):
+        raise InvalidGroupNameException
+
+
+def raise_exception_if_invalid_member_ids(member_ids):
+    user_ids = list(User.objects.values_list("id", flat=True))
+
+    for member_id in member_ids:
+        if member_id not in user_ids:
+            raise InvalidMemberException
+
+
+def raise_exception_if_invalid_group_id(group_id):
+    if not Group.objects.filter(id=group_id).exists():
+        raise InvalidGroupException
+
+
+def raise_exception_if_user_not_in_group(user_id, group_id):
+    if not Membership.objects.filter(group_id=group_id, member_id=user_id).exists():
+        raise UserNotInGroupException
+
+
+def raise_exception_if_user_not_admin(user_id, group_id):
+    membership = Membership.objects.get(group_id=group_id, member_id=user_id)
+    if membership.is_admin == False:
+        raise UserIsNotAdminException
+
+
+def raise_exception_if_invalid_offset_value(offset):
+    if offset < 0:
+        raise InvalidOffSetValueException
+
+
+def raise_exception_if_invalid_limit_value(limit):
+    if limit <= 0:
+        raise InvalidLimitSetValueException
+
+
 
 # endregion
 

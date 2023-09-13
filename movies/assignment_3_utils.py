@@ -1,4 +1,4 @@
-from assignments.movies.models import Actor, Director, Movie, Rating
+from .models import Actor, Director, Movie, Rating
 from django.db.models import Q
 from .assignment_2_utils import get_average_rating_of_movie, get_total_number_of_ratings
 

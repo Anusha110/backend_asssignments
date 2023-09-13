@@ -1,52 +1,9 @@
-from assignments.fb_post.models import Post, Comment, Reaction, User, Membership, Group
+from .assignment_6_utils import raise_exception_if_invalid_user_id, raise_exception_if_invalid_group_name, \
+    raise_exception_if_invalid_member_ids, raise_exception_if_invalid_group_id, raise_exception_if_user_not_in_group, \
+    raise_exception_if_user_not_admin, raise_exception_if_invalid_offset_value, raise_exception_if_invalid_limit_value, \
+    get_post_details_object
+from .models import Post, Comment, Reaction, User, Membership, Group
 from django.db.models import Count, F, Prefetch
-from assignments.fb_post.exceptions import InvalidGroupNameException, InvalidMemberException, InvalidGroupException, \
-    UserNotInGroupException, UserIsNotAdminException, InvalidOffSetValueException, InvalidLimitSetValueException
-from .assignment_6_utils import raise_exception_if_invalid_user_id, get_post_details_object
-
-
-# region Validation Functions
-
-def raise_exception_if_invalid_group_name(group_name):
-    if (group_name == ""):
-        raise InvalidGroupNameException
-
-
-def raise_exception_if_invalid_member_ids(member_ids):
-    user_ids = list(User.objects.values_list("id", flat=True))
-
-    for member_id in member_ids:
-        if member_id not in user_ids:
-            raise InvalidMemberException
-
-
-def raise_exception_if_invalid_group_id(group_id):
-    if not Group.objects.filter(id=group_id).exists():
-        raise InvalidGroupException
-
-
-def raise_exception_if_user_not_in_group(user_id, group_id):
-    if not Membership.objects.filter(group_id=group_id, member_id=user_id).exists():
-        raise UserNotInGroupException
-
-
-def raise_exception_if_user_not_admin(user_id, group_id):
-    membership = Membership.objects.get(group_id=group_id, member_id=user_id)
-    if membership.is_admin == False:
-        raise UserIsNotAdminException
-
-
-def raise_exception_if_invalid_offset_value(offset):
-    if offset < 0:
-        raise InvalidOffSetValueException
-
-
-def raise_exception_if_invalid_limit_value(limit):
-    if limit <= 0:
-        raise InvalidLimitSetValueException
-
-
-# endregion
 
 # Task 2
 def create_group(user_id, name, member_ids):
